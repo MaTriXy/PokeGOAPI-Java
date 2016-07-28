@@ -31,7 +31,7 @@ sourceSets {
     main {
         proto {
             // Need to use custom dir cause Gradle doesn't like us otherwise :(
-            srcDir 'src/resources/protobuf/pogo'
+            srcDir 'src/resources/protobuf/src'
             include '**/*.proto'
         }
     }
@@ -62,11 +62,12 @@ protobuf {
     }
 }
 
-def checkstyleOutputDir = "${project.rootDir}/build/reports/checkstyle/"
+def checkstyleOutputDir = "${project.projectDir}/build/reports/checkstyle/"
 
 checkstyle {
     toolVersion = '7.0'
-    configFile = file("${project.rootDir}/config/checkstyle.xml")
+    configFile = file("${project.projectDir}/config/checkstyle.xml")
+    configProperties = [ "suppressionFile" : file("${project.projectDir}/config/suppressions.xml")]
     reportsDir = file(checkstyleOutputDir)
 
     ignoreFailures = false
@@ -94,8 +95,9 @@ checkstyleMain.doLast {
 }
 
 dependencies {
-    compile 'com.google.code.gson:gson:2.7'
-    compile 'net.sourceforge.streamsupport:streamsupport:1.5'
+    compile 'com.squareup.okio:okio:1.9.0'
+    compile 'com.squareup.moshi:moshi:1.2.0'
+    compile 'com.annimon:stream:1.1.1'
     compile 'com.squareup.okhttp3:okhttp:3.4.0-RC1'
     compile 'com.google.protobuf:protobuf-java:3.0.0-beta-3'
     compileOnly 'org.projectlombok:lombok:1.16.6'
@@ -105,4 +107,13 @@ idea {
     module {
         sourceDirs += file("${protobuf.generatedFilesBaseDir}/main/java");
     }
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+artifacts {
+    archives sourcesJar
 }

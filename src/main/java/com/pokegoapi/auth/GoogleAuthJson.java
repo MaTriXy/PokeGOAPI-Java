@@ -15,57 +15,30 @@
 
 package com.pokegoapi.auth;
 
-import com.google.gson.annotations.SerializedName;
+import com.squareup.moshi.Json;
+
+import lombok.Getter;
+import lombok.Setter;
 
 public class GoogleAuthJson {
-	@SerializedName("device_code")
+	@Getter
+	@Setter
+	@Json(name = "device_code")
 	String deviceCode;
-	@SerializedName("user_code")
+	@Getter
+	@Setter
+	@Json(name = "user_code")
 	String userCode;
-	@SerializedName("verification_url")
+	@Getter
+	@Setter
+	@Json(name = "verification_url")
 	String verificationUrl;
-	@SerializedName("expires_in")
+	@Getter
+	@Setter
+	@Json(name = "expires_in")
 	int expiresIn;
-	@SerializedName("interval")
+	@Getter
+	@Setter
+	@Json(name = "interval")
 	int interval;
-
-	public String getDeviceCode() {
-		return deviceCode;
-	}
-
-	public void setDeviceCode(String deviceCode) {
-		this.deviceCode = deviceCode;
-	}
-
-	public String getUserCode() {
-		return userCode;
-	}
-
-	public void setUserCode(String userCode) {
-		this.userCode = userCode;
-	}
-
-	public String getVerificationUrl() {
-		return verificationUrl;
-	}
-
-	public void setVerificationUrl(String verificationUrl) {
-		this.verificationUrl = verificationUrl;
-	}
-
-	public int getExpiresIn() {
-		return expiresIn;
-	}
-
-	public void setExpiresIn(int expiresIn) {
-		this.expiresIn = expiresIn;
-	}
-
-	public int getInterval() {
-		return interval;
-	}
-
-	public void setInterval(int interval) {
-		this.interval = interval;
-	}
 }

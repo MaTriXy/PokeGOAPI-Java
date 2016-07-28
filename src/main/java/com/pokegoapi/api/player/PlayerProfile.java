@@ -37,16 +37,26 @@ import java.util.Map;
 public class PlayerProfile {
 	private static final String TAG = PlayerProfile.class.getSimpleName();
 	private final PokemonGo api;
+	@Getter
 	private long creationTime;
+	@Getter
 	private String username;
+	@Getter
 	private Team team;
+	@Getter
 	private int pokemonStorage;
+	@Getter
 	private int itemStorage;
+	@Getter
 	private EquippedBadgeOuterClass.EquippedBadge badge;
 
+	@Getter
 	private PlayerAvatar avatar;
+	@Getter
 	private DailyBonus dailyBonus;
+	@Getter
 	private ContactSettings contactSettings;
+	@Getter
 	private Map<Currency, Integer> currencies = new HashMap<Currency, Integer>();
 	@Getter
 	@Setter
@@ -59,27 +69,27 @@ public class PlayerProfile {
 
 	/**
 	 * Updates the player profile with the latest data.
-	 * @throws LoginFailedException the login failed exception
+	 *
+	 * @throws LoginFailedException  the login failed exception
 	 * @throws RemoteServerException the remote server exception
 	 */
-	public void updateProfile() throws LoginFailedException, RemoteServerException {
+	public void updateProfile() throws RemoteServerException, LoginFailedException {
 		GetPlayerMessage getPlayerReqMsg = GetPlayerMessage.newBuilder().build();
 		ServerRequest getPlayerServerRequest = new ServerRequest(RequestType.GET_PLAYER, getPlayerReqMsg);
-		api.getRequestHandler().request(getPlayerServerRequest);
-		api.getRequestHandler().sendServerRequests();
+		api.getRequestHandler().sendServerRequests(getPlayerServerRequest);
 
 		GetPlayerResponseOuterClass.GetPlayerResponse playerResponse = null;
 		try {
 			playerResponse = GetPlayerResponseOuterClass.GetPlayerResponse.parseFrom(getPlayerServerRequest.getData());
 		} catch (InvalidProtocolBufferException e) {
-			e.printStackTrace();
+			throw new RemoteServerException(e);
 		}
 
 		badge = playerResponse.getPlayerData().getEquippedBadge();
 		creationTime = playerResponse.getPlayerData().getCreationTimestampMs();
 		itemStorage = playerResponse.getPlayerData().getMaxItemStorage();
 		pokemonStorage = playerResponse.getPlayerData().getMaxPokemonStorage();
-		team = Team.values()[playerResponse.getPlayerData().getTeam()];
+		team = Team.values()[playerResponse.getPlayerData().getTeamValue()];
 		username = playerResponse.getPlayerData().getUsername();
 
 		final PlayerAvatar avatarApi = new PlayerAvatar();
@@ -114,7 +124,6 @@ public class PlayerProfile {
 
 		avatar = avatarApi;
 		dailyBonus = bonusApi;
-
 
 
 	}

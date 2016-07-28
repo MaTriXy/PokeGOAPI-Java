@@ -16,8 +16,9 @@
 
 package com.pokegoapi.api.inventory;
 
-import POGOProtos.Inventory.ItemIdOuterClass.ItemId;
-import POGOProtos.Inventory.ItemOuterClass;
+import POGOProtos.Inventory.Item.ItemDataOuterClass;
+import POGOProtos.Inventory.Item.ItemDataOuterClass.ItemData;
+import POGOProtos.Inventory.Item.ItemIdOuterClass.ItemId;
 import POGOProtos.Networking.Requests.Messages.RecycleInventoryItemMessageOuterClass.RecycleInventoryItemMessage;
 import POGOProtos.Networking.Requests.RequestTypeOuterClass;
 import POGOProtos.Networking.Responses.RecycleInventoryItemResponseOuterClass;
@@ -28,6 +29,7 @@ import com.pokegoapi.exceptions.LoginFailedException;
 import com.pokegoapi.exceptions.RemoteServerException;
 import com.pokegoapi.main.ServerRequest;
 
+import java.util.Collection;
 import java.util.HashMap;
 
 /**
@@ -38,6 +40,10 @@ public class ItemBag {
 	private HashMap<ItemId, Item> items;
 
 	public ItemBag(PokemonGo pgo) {
+		reset(pgo);
+	}
+
+	public void reset(PokemonGo pgo) {
 		this.pgo = pgo;
 		items = new HashMap<>();
 	}
@@ -96,9 +102,27 @@ public class ItemBag {
 
 		// prevent returning null
 		if (!items.containsKey(type)) {
-			return new Item(ItemOuterClass.Item.newBuilder().setCount(0).setItemId(type).build());
+			return new Item(ItemData.newBuilder().setCount(0).setItemId(type).build());
 		}
 
 		return items.get(type);
+	}
+
+
+	public Collection<Item> getItems() {
+		return items.values();
+	}
+
+	/**
+	 * Get used space inside of player inventory.
+	 *
+	 * @return used space
+	 */
+	public int getItemsCount() {
+		int ct = 0;
+		for (Item item : items.values()) {
+			ct += item.getCount();
+		}
+		return ct;
 	}
 }

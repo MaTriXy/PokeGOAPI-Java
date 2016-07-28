@@ -15,6 +15,7 @@
 
 package com.pokegoapi.api.map;
 
+import POGOProtos.Inventory.Item.ItemIdOuterClass.ItemId;
 import POGOProtos.Map.Fort.FortDataOuterClass.FortData;
 import POGOProtos.Map.Fort.FortTypeOuterClass.FortType;
 import POGOProtos.Map.MapCellOuterClass;
@@ -34,9 +35,15 @@ import POGOProtos.Networking.Responses.EncounterResponseOuterClass.EncounterResp
 import POGOProtos.Networking.Responses.FortDetailsResponseOuterClass;
 import POGOProtos.Networking.Responses.FortSearchResponseOuterClass.FortSearchResponse;
 import POGOProtos.Networking.Responses.GetMapObjectsResponseOuterClass;
+
+import com.annimon.stream.Collectors;
+import com.annimon.stream.Stream;
+import com.annimon.stream.function.Function;
+import com.annimon.stream.function.Predicate;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.pokegoapi.api.PokemonGo;
 import com.pokegoapi.api.map.fort.FortDetails;
+import com.pokegoapi.api.gym.Gym;
 import com.pokegoapi.api.map.pokemon.CatchablePokemon;
 import com.pokegoapi.api.map.pokemon.NearbyPokemon;
 import com.pokegoapi.exceptions.LoginFailedException;
@@ -45,14 +52,14 @@ import com.pokegoapi.google.common.geometry.MutableInteger;
 import com.pokegoapi.google.common.geometry.S2CellId;
 import com.pokegoapi.google.common.geometry.S2LatLng;
 import com.pokegoapi.main.ServerRequest;
-import java8.util.function.Function;
-import java8.util.stream.Collectors;
-import java8.util.stream.StreamSupport;
+
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 public class Map {
@@ -92,7 +99,7 @@ public class Map {
 	 * @return a List of CatchablePokemon at your current location
 	 */
 	public List<CatchablePokemon> getCatchablePokemon() throws LoginFailedException, RemoteServerException {
-		List<CatchablePokemon> catchablePokemons = new ArrayList<>();
+		Set<CatchablePokemon> catchablePokemons = new HashSet<>();
 		MapObjects objects = getMapObjects();
 
 		for (MapPokemon mapPokemon : objects.getCatchablePokemons()) {
@@ -103,7 +110,14 @@ public class Map {
 			catchablePokemons.add(new CatchablePokemon(api, wildPokemon));
 		}
 
-		return catchablePokemons;
+		// TODO: Check if this code is correct; merged because this contains many other fixes
+		/*for (Pokestop pokestop : objects.getPokestops()) {
+			if (pokestop.inRange() && pokestop.hasLurePokemon()) {
+				catchablePokemons.add(new CatchablePokemon(api, pokestop.getFortData()));
+			}
+		}*/
+
+		return new ArrayList<>(catchablePokemons);
 	}
 
 	/**
@@ -137,6 +151,24 @@ public class Map {
 
 		return points;
 	}
+
+	/**
+	 * Get a list of gyms near the current location.
+	 *
+	 * @return List of gyms
+	 */
+	public List<Gym> getGyms() throws LoginFailedException, RemoteServerException {
+		List<Gym> gyms = new ArrayList<>();
+		MapObjects objects = getMapObjects();
+
+		for (FortData fortdata : objects.getGyms()) {
+			gyms.add(new Gym(api, fortdata));
+		}
+
+		return gyms;
+	}
+
+
 
 	/**
 	 * Returns a list of decimated spawn points at current location.
@@ -283,7 +315,9 @@ public class Map {
 			result.addDecimatedSpawnPoints(mapCell.getDecimatedSpawnPointsList());
 			result.addSpawnPoints(mapCell.getSpawnPointsList());
 
-			java.util.Map<FortType, List<FortData>> groupedForts = StreamSupport.stream(mapCell.getFortsList())
+
+
+			java.util.Map<FortType, List<FortData>> groupedForts = Stream.of(mapCell.getFortsList())
 					.collect(Collectors.groupingBy(new Function<FortData, FortType>() {
 						@Override
 						public FortType apply(FortData fortData) {
@@ -408,7 +442,7 @@ public class Map {
 				.setEncounterId(catchablePokemon.getEncounterId())
 				.setPlayerLatitude(api.getLatitude())
 				.setPlayerLongitude(api.getLongitude())
-				.setSpawnpointId(catchablePokemon.getSpawnpointId())
+				.setSpawnPointId(catchablePokemon.getSpawnPointId())
 				.build();
 		ServerRequest serverRequest = new ServerRequest(RequestTypeOuterClass.RequestType.ENCOUNTER, reqMsg);
 		api.getRequestHandler().sendServerRequests(serverRequest);
@@ -440,7 +474,7 @@ public class Map {
 			double normalizedHitPosition,
 			double normalizedReticleSize,
 			double spinModifier,
-			int pokeball)
+			ItemId pokeball)
 			throws LoginFailedException, RemoteServerException {
 
 		CatchPokemonMessage reqMsg = CatchPokemonMessage.newBuilder()
@@ -448,7 +482,7 @@ public class Map {
 				.setHitPokemon(true)
 				.setNormalizedHitPosition(normalizedHitPosition)
 				.setNormalizedReticleSize(normalizedReticleSize)
-				.setSpawnPointGuid(catchablePokemon.getSpawnpointId())
+				.setSpawnPointId(catchablePokemon.getSpawnPointId())
 				.setSpinModifier(spinModifier)
 				.setPokeball(pokeball)
 				.build();

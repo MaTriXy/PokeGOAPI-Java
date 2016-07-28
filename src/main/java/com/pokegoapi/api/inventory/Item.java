@@ -15,28 +15,24 @@
 
 package com.pokegoapi.api.inventory;
 
-import POGOProtos.Inventory.ItemIdOuterClass.ItemId;
-
+import POGOProtos.Inventory.Item.ItemDataOuterClass;
+import POGOProtos.Inventory.Item.ItemIdOuterClass.ItemId;
+import lombok.Getter;
+import lombok.Setter;
 
 public class Item {
-	private POGOProtos.Inventory.ItemOuterClass.Item proto;
+	private ItemDataOuterClass.ItemData proto;
+	@Getter
+	@Setter
 	private int count;
 
-	public Item(POGOProtos.Inventory.ItemOuterClass.Item proto) {
+	public Item(ItemDataOuterClass.ItemData proto) {
 		this.proto = proto;
 		this.count = proto.getCount();
 	}
 
 	public ItemId getItemId() {
 		return proto.getItemId();
-	}
-
-	public int getCount() {
-		return count;
-	}
-
-	public void setCount(int count) {
-		this.count = count;
 	}
 
 	public boolean isUnseen() {
